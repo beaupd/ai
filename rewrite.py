@@ -8,7 +8,7 @@ class Game:
     _config = {
         "colors": {'blauw', 'geel', 'groen', 'oranje', 'rood', 'zwart'},
         "pins": 4,
-        "manual": False,
+        "manual": True,
         "limit": 10,
     }
 
@@ -48,20 +48,25 @@ class Game:
         self.guesses += 1
         half_good = 0
         good = 0
-        temp_code = self.code
+        temp_code = [int(c) for c in self.code]
+        blacklist = []
     
         if guess == self.code:
             self.playing = False
             # print("CORRECT GUESS!")
             return "CORRECT GUESS!"
-        for i, c in enumerate(guess):
-            print(c, guess, self.code)
-            if c in temp_code:
-                if c == self.code[i]:
-                    temp_code[i] = len(self.colors)+1 # zet index naar een onbereikbaar getal zodat we geen dubbele goeds of half goods krijgen
-                    good += 1
-                else:
-                    half_good += 1
+        for i in range(self.pins):
+            print(str(guess[i]) ,temp_code[i])
+            if guess[i] == temp_code[i]:
+                good += 1
+                blacklist.append(i)
+        for i in range(self.pins):
+            if guess[i] in temp_code:
+                for idx in range(len(temp_code)):
+                    if idx not in blacklist:
+                        if guess[i] == temp_code[idx]:
+                            half_good += 1
+        # print(f"{half_good} half good, {good} good")
         return (f"{half_good} half good, {good} good")
 
 def simpleStrategy(Instance: Game):
@@ -76,4 +81,5 @@ def simpleStrategy(Instance: Game):
     print("end")
 
 g = Game()
-simpleStrategy(g)
+# simpleStrategy(g)
+g.guess(g.check_input())
