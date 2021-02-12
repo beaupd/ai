@@ -1,14 +1,14 @@
 from random import choice
 import json
 import numpy as np
-from itertools import permutations 
+from itertools import combinations_with_replacement, permutations
 
 class Game:
 
     _config = {
         "colors": {'blauw', 'geel', 'groen', 'oranje', 'rood', 'zwart'},
         "pins": 4,
-        "manual": True,
+        "manual": False,
         "limit": 10,
     }
 
@@ -20,7 +20,7 @@ class Game:
         self.playing = True
 
         self.color_dict = dict(zip([i for i in range(len(self.colors))], self.colors))
-        print(self.color_dict, self.colors)
+        # print(self.color_dict, self.colors)
         if config["manual"]: # Als manual dan wait for (correct) input
             self.code = self.check_input() # call input function
             self.code_words = [self.color_dict[int(i)] for i in self.code] # code omgezet in de naam van de kleur
@@ -56,7 +56,7 @@ class Game:
             # print("CORRECT GUESS!")
             return "CORRECT GUESS!"
         for i in range(self.pins):
-            print(str(guess[i]) ,temp_code[i])
+            # print(str(guess[i]) ,temp_code[i])
             if guess[i] == temp_code[i]:
                 good += 1
                 blacklist.append(i)
@@ -69,17 +69,36 @@ class Game:
         # print(f"{half_good} half good, {good} good")
         return (f"{half_good} half good, {good} good")
 
+def getAllSubsetsWithCertainSum(number_list, target_sum):
+    
+    matching_numbers = []
+
+    def recursion(subset):
+        for number in number_list:
+            if sum(subset+[number]) < target_sum:
+                recursion(subset+[number])
+            elif sum(subset+[number]) == target_sum:
+                matching_numbers.append(subset+[number])
+
+    recursion([])
+    return matching_numbers
+
 def simpleStrategy(Instance: Game):
-    combs = list(permutations(Instance.color_dict, Instance.pins))
+    combs = getAllSubsetsWithCertainSum(Instance.color_dict, Instance.pins)
+    # print(combs, len(combs))
     playing = True
     index = 0
-    while playing:
-        guess = ''.join(map(str, combs[index]))
-        print(guess, Instance.guess(guess))
-        index+=1
-        playing = Instance.playing
+    for c in combs:
+        if Instance.playing:
+            guess = ''.join(map(str, c))
+            print(Instance.guess(guess))
+            index+=1
+            playing = Instance.playing
     print("end")
 
 g = Game()
-# simpleStrategy(g)
-g.guess(g.check_input())
+simpleStrategy(g)
+# g.guess(g.check_input())
+
+# bron https://stackoverflow.com/questions/50239927/find-all-combinations-of-list-elements-including-duplicate-elements
+# voor functie "getAllSubsetsWithCertainSum()"
