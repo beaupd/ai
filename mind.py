@@ -58,7 +58,7 @@ class Mastermind:
         else:
             index = limit
             while index > 0 and self.playing:
-                index-= 1
+                index -= 1
                 self.doRound()
                 print("round")
             if self.playing == True:

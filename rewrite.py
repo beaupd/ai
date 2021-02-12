@@ -1,7 +1,7 @@
 from random import choice
 import json
 import numpy as np
-from itertools import combinations_with_replacement, permutations
+from itertools import combinations_with_replacement, permutations, chain
 
 class Game:
 
@@ -53,7 +53,7 @@ class Game:
     
         if guess == self.code:
             self.playing = False
-            # print("CORRECT GUESS!")
+            print("CORRECT GUESS!")
             return "CORRECT GUESS!"
         for i in range(self.pins):
             # print(str(guess[i]) ,temp_code[i])
@@ -67,24 +67,31 @@ class Game:
                         if guess[i] == temp_code[idx]:
                             half_good += 1
         # print(f"{half_good} half good, {good} good")
-        return (f"{half_good} half good, {good} good")
+        return {"halfGood": half_good, "good": good}
 
-def getAllSubsetsWithCertainSum(number_list, target_sum):
-    
-    matching_numbers = []
 
-    def recursion(subset):
-        for number in number_list:
-            if sum(subset+[number]) < target_sum:
-                recursion(subset+[number])
-            elif sum(subset+[number]) == target_sum:
-                matching_numbers.append(subset+[number])
+def createPossibleCodes(colors, numberOfPositions):
+    return addColor([], colors, numberOfPositions, 0)
 
-    recursion([])
-    return matching_numbers
+def addColor(codeList,colors,numberOfPositions,depth):    
+    depth +=1
+    # The start of the list with one element
+    if len(codeList) == 0:
+        for color in colors:            
+            codeList.append([color])
+    # Add an elememt to the combination
+    else:
+        for code in codeList:
+            for color in colors:               
+                code.append(color)
+    # recursive
+    if (depth < numberOfPositions):        
+        codeList = addColor(codeList,colors,numberOfPositions,depth)
+    return codeList
 
 def simpleStrategy(Instance: Game):
-    combs = getAllSubsetsWithCertainSum(Instance.color_dict, Instance.pins)
+    combs = createPossibleCodes(Instance.color_dict, Instance.pins)
+    print(combs)
     # print(combs, len(combs))
     playing = True
     index = 0
@@ -96,9 +103,37 @@ def simpleStrategy(Instance: Game):
             playing = Instance.playing
     print("end")
 
-g = Game()
-simpleStrategy(g)
-# g.guess(g.check_input())
 
-# bron https://stackoverflow.com/questions/50239927/find-all-combinations-of-list-elements-including-duplicate-elements
-# voor functie "getAllSubsetsWithCertainSum()"
+def heuristiek(Inst: Game):
+    """
+        test eerst alle kleuren een het aantal goede, 
+        vanuit daar probeert die alle mogelijkheden
+        Beau Dekker
+    """
+    potential = [i for i in Inst.color_dict]
+    correct = []
+    
+    
+    for c in potential: # check which colors are in the code and by which amount
+        res = g.guess([c for _ in range(Inst.pins)])
+        if res["good"] > 0:
+            correct.append((c, res["good"]))
+
+    possibles = sum([[c[0] for _ in range(c[1])] for c in correct], []) # get all colors and their amount in code
+    for p in [each_permutation for each_permutation in permutations(possibles, 4)]:# Make all possible combinations  (bron 1)
+        if Inst.playing:
+            res = Inst.guess(p)
+        else:
+            break
+
+    print(Inst.guesses)
+
+
+g = Game()
+# simpleStrategy(g)
+# g.guess(g.check_input())
+heuristiek(g)
+
+# bron 1
+# all_combinations = [list(zip(each_permutation, list2)) for each_permutation in itertools.permutations(list1, len(list2))]
+# https://www.codegrepper.com/code-examples/delphi/all+possible+unique+combinations+of+numbers+from+the+list+python
